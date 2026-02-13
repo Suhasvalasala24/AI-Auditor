@@ -1,0 +1,158 @@
+You are updating an existing AI Auditor backend.
+
+Current problem:
+- The system uses seeded data, sample metrics, or demo values
+- Some dashboard metrics are hardcoded or simulated
+- This must be removed completely
+
+Goal:
+Convert the system into a REAL-TIME, EVIDENCE-DRIVEN AI AUDITOR.
+
+After this change:
+- NO sample data
+- NO fake metrics
+- NO seeded audits
+- ALL metrics must be computed from real evidence sources
+- If no evidence exists, metrics must show "No Data" or "Baseline Not Established"
+
+================================================================
+STRICT RULES
+================================================================
+- Remove ALL demo seed data
+- Remove ALL random or placeholder metric generators
+- Remove ALL fake audit runs
+- Remove ALL default findings
+- Never fabricate metrics
+- If data is missing, return explicit empty states
+
+================================================================
+WHAT TO CHANGE (STEP BY STEP)
+================================================================
+
+------------------------------------------------
+1. REMOVE ALL SEED / SAMPLE DATA
+------------------------------------------------
+- Delete any database seeding logic
+- Delete any startup demo audit creation
+- Delete random metric generators
+- Delete fallback sample values
+
+Dashboard metrics must NEVER be pre-populated.
+
+------------------------------------------------
+2. METRICS MUST COME ONLY FROM REAL AUDIT RUNS
+------------------------------------------------
+Update all dashboard and model metrics so they are computed ONLY from:
+
+- AuditRun table
+- AuditSummary table
+- AuditFinding table
+
+Examples:
+- total_audits = COUNT(AuditRun)
+- passed_audits = COUNT(AuditRun WHERE audit_result = AUDIT_PASS)
+- critical_findings_count = COUNT(AuditFinding WHERE severity = CRITICAL)
+- drift_score = AVG(AuditSummary.drift_score)
+
+If tables are empty:
+- Return 0
+- OR return "NO_DATA"
+
+------------------------------------------------
+3. REAL EVIDENCE INGESTION (MANDATORY)
+------------------------------------------------
+Ensure passive audits only compute metrics using REAL evidence:
+
+EvidenceSource types:
+- api
+- logs
+- batch
+- container
+- sample (manual upload only)
+
+For each EvidenceSource:
+- Parse real files or API responses
+- Generate summaries dynamically
+- Store summaries in AuditSummary
+
+DO NOT:
+- Simulate data
+- Use static JSON examples
+- Reuse previous summaries incorrectly
+
+------------------------------------------------
+4. REAL-TIME AUDIT WINDOW HANDLING
+------------------------------------------------
+Each audit must:
+- Use audit_window.start_time and audit_window.end_time
+- Pull ONLY evidence within that window
+- Never reuse old evidence for new audits
+
+If no evidence exists in the window:
+- Mark audit_result = NO_EVIDENCE
+- Do NOT generate findings
+
+------------------------------------------------
+5. BASELINE LOGIC (CRITICAL)
+------------------------------------------------
+Baseline must:
+- Come from last approved audit
+- Be stored explicitly
+- Never be fabricated
+
+If no baseline exists:
+- Store current metrics
+- Mark audit_result = BASELINE_CREATED
+- Do NOT calculate drift/bias
+
+------------------------------------------------
+6. UPDATE DASHBOARD ENDPOINTS
+------------------------------------------------
+Modify these endpoints to be fully real-time:
+
+- GET /dashboard/overview
+- GET /dashboard/model/{model_id}
+
+All values must be computed at request time from database records.
+
+If no data exists:
+- Show zeros
+- Show "Baseline not established"
+- Never show fake values
+
+------------------------------------------------
+7. UPDATE API RESPONSES FOR EMPTY STATES
+------------------------------------------------
+Define clear empty responses:
+
+Examples:
+- "No audits executed yet"
+- "Baseline not established"
+- "No evidence found in audit window"
+
+Frontend must be able to render these states cleanly.
+
+------------------------------------------------
+8. VALIDATION & SAFETY
+------------------------------------------------
+Add guards to prevent:
+- Division by zero
+- Fake percentages
+- Misleading drift scores
+
+If baseline_value is null:
+- drift_score = null
+- bias_score = null
+
+------------------------------------------------
+OUTPUT REQUIREMENTS
+------------------------------------------------
+Generate:
+- Updated FastAPI backend code
+- Clean audit computation logic
+- Real-time dashboard queries
+- No sample data anywhere
+- Comments explaining empty states vs real metrics
+
+This backend must reflect ONLY real model behavior.
+No demos. No simulations. No placeholders.

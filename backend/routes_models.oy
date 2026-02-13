@@ -1,0 +1,48 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
+from .database import get_db
+from .models import AIModel, EvidenceSource
+
+router = APIRouter(prefix="/models", tags=["Models"])
+
+
+@router.post("/register-with-connector")
+def register_model(payload: dict, db: Session = Depends(get_db)):
+
+    required = ["model_id", "name", "provider", "model"]
+    for r in required:
+        if r not in payload:
+            raise HTTPException(400, f"Missing field: {r}")
+
+    # 1️⃣ Create logical model
+    model = AIModel(
+        model_id=payload["model_id"],
+        name=payload["name"],
+        version=payload.get("model"),
+        model_type="llm",
+        connection_type="api",
+        description=payload.get("description"),
+    )
+    db.add(model)
+    db.flush()  # model.id available
+
+    # 2️⃣ Create execution connector
+    evidence = EvidenceSource(
+        model_id=model.id,
+        source_type="api",
+        config={
+            "provider": payload["provider"],
+            "model": payload["model"],
+            "api_key": payload.get("api_key"),
+            "base_url": payload.get("base_url"),
+        },
+    )
+    db.add(evidence)
+
+    db.commit()
+
+    return {
+        "status": "registered",
+        "model_id": model.model_id,
+    }

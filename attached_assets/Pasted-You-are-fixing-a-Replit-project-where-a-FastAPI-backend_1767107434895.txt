@@ -1,0 +1,78 @@
+You are fixing a Replit project where a FastAPI backend exists
+but is NOT accessible publicly because a frontend router is being served instead.
+
+Current situation:
+- Project contains both frontend (client/) and backend (backend/)
+- FastAPI backend runs successfully with Uvicorn
+- Public URL shows: "404 Page Not Found – Did you forget to add the page to the router?"
+- /docs also returns 404
+- This means Replit is serving the frontend, not FastAPI
+
+GOAL:
+Expose the FastAPI backend as the public web server so that:
+/docs loads Swagger UI
+API endpoints are accessible
+Frontend is ignored for now
+
+--------------------------------------------
+REQUIRED FIXES (DO NOT ADD FEATURES)
+--------------------------------------------
+
+1. Update the Replit run command so FastAPI is the ONLY public server
+
+Create or update the `.replit` file at project root to contain EXACTLY:
+
+run = "uvicorn backend.main:app --host 0.0.0.0 --port 8000"
+
+2. Ensure FastAPI app is correctly defined
+
+Verify that `backend/main.py` contains a FastAPI app object named `app`,
+for example:
+
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+Do NOT rename the app variable.
+
+3. Do NOT serve frontend
+
+- Do NOT run npm, vite, or react
+- Do NOT serve index.html
+- Do NOT proxy frontend routes
+- Ignore client/ directory completely
+
+4. Restart behavior
+
+After changes:
+- Stop the current Replit run
+- Restart the Repl
+- Uvicorn must bind to 0.0.0.0:8000
+
+--------------------------------------------
+EXPECTED RESULT
+--------------------------------------------
+
+When opening:
+https://<replit-public-url>/docs
+
+You must see:
+- Swagger UI
+- FastAPI logo
+- All backend endpoints
+
+Opening `/` may still show 404 — this is acceptable.
+
+--------------------------------------------
+CONSTRAINTS
+--------------------------------------------
+- Do NOT merge frontend and backend
+- Do NOT add reverse proxies
+- Do NOT change backend logic
+- Fix routing only
+
+This prompt is ONLY to expose FastAPI correctly.

@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ================================
+   BASE THEME VARIABLES
+================================ */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
+
+    --card: 0 0% 98%;
+    --card-foreground: 0 0% 9%;
+    --card-border: 0 0% 95%;
+
+    --border: 0 0% 91%;
+    --input: 0 0% 75%;
+    --ring: 217 91% 60%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 217 8% 92%;
+    --secondary-foreground: 0 0% 9%;
+
+    --muted: 217 12% 90%;
+    --muted-foreground: 0 0% 40%;
+
+    --accent: 217 15% 93%;
+    --accent-foreground: 0 0% 9%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --popover: 0 0% 97%;
+    --popover-foreground: 0 0% 9%;
+    --popover-border: 0 0% 94%;
+
+    --radius: 0.5rem;
+
+    --font-sans: Inter, system-ui, sans-serif;
+    --font-mono: "JetBrains Mono", monospace;
+  }
+
+  .dark {
+    --background: 0 0% 9%;
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 11%;
+    --card-foreground: 0 0% 98%;
+    --card-border: 0 0% 13%;
+
+    --border: 0 0% 16%;
+    --input: 0 0% 30%;
+
+    --secondary: 217 8% 20%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 217 12% 18%;
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 217 15% 17%;
+    --accent-foreground: 0 0% 98%;
+
+    --popover: 0 0% 15%;
+    --popover-foreground: 0 0% 98%;
+    --popover-border: 0 0% 17%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+/* ================================
+   UTILITIES
+================================ */
+@layer utilities {
+  input[type="search"]::-webkit-search-cancel-button {
+    @apply hidden;
+  }
+
+  [contenteditable][data-placeholder]:empty::before {
+    content: attr(data-placeholder);
+    color: hsl(var(--muted-foreground));
+    pointer-events: none;
+  }
+}

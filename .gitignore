@@ -1,0 +1,26 @@
+node_modules
+dist
+.DS_Store
+server/public
+vite.config.ts.*
+*.tar.gz
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.db
+
+# Node
+node_modules/
+
+# Vite / build
+dist/
+
+# OS
+.DS_Store
+
+# Local apps
+client/my-app/
+
+.env
+.env

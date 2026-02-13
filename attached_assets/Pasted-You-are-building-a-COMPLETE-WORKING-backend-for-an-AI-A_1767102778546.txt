@@ -1,0 +1,259 @@
+You are building a COMPLETE, WORKING backend for an AI Auditor platform.
+
+Frontend already exists and consumes real APIs.
+Frontend repository:
+https://github.com/DevSharma18/Ai_Auditor
+
+You MUST align backend logic, responses, and metric names with the frontend.
+
+================================================================
+CORE PRINCIPLES (NON-NEGOTIABLE)
+================================================================
+- This system does NOT monitor live traffic
+- This system does NOT proxy model requests
+- Passive audits use already-generated model behavior
+- Active audits are explicit, rule-based, and optional
+- Audits are scheduled automatically by the system
+- Audits are baseline-driven (baseline vs current comparison)
+- Only summaries, aggregates, and metrics are stored
+- NO raw prompts, NO raw responses, NO user data
+
+================================================================
+TECH STACK
+================================================================
+- Python
+- FastAPI
+- SQLite (production-ready schema, no in-memory DB)
+- SQLAlchemy
+- Pydantic
+- APScheduler (for scheduled audits)
+- Uvicorn
+
+================================================================
+FRONTEND METRICS YOU MUST SUPPORT
+================================================================
+Implement backend logic for ALL of the following metrics
+(as seen in frontend dashboards, tables, and reports):
+
+GLOBAL DASHBOARD METRICS:
+- total_models
+- total_audits
+- passed_audits
+- failed_audits
+- critical_findings_count
+- high_findings_count
+- overall_risk_score
+- audit_status_distribution
+- drift_score_percentage
+
+MODEL-LEVEL METRICS:
+- model_id
+- model_name
+- model_version
+- connection_type
+- last_audit_status
+- last_audit_time
+- audit_frequency
+
+AUDIT-LEVEL METRICS:
+- audit_id
+- audit_type (passive | active)
+- executed_at
+- audit_status (SUCCESS | PARTIAL | FAILED)
+- audit_result (AUDIT_PASS | AUDIT_WARN | AUDIT_FAIL | BASELINE_CREATED)
+- total_findings
+- critical_findings
+- high_findings
+- drift_score
+- bias_score
+- risk_score
+
+FINDINGS METRICS:
+- finding_id
+- category (drift | bias | risk | compliance | security)
+- rule_id (nullable)
+- severity (LOW | MEDIUM | HIGH | CRITICAL)
+- metric_name
+- baseline_value
+- current_value
+- deviation_percentage
+- description
+
+================================================================
+DATABASE MODELS (MANDATORY)
+================================================================
+
+Create SQLAlchemy models for:
+
+1. AIModel
+- id
+- model_id
+- name
+- version
+- model_type (llm | ml)
+- connection_type (api | logs | batch | container | sample)
+- created_at
+
+2. EvidenceSource
+- id
+- model_id (FK)
+- type (api | logs | batch | container | sample)
+- config (JSON)
+- read_only (boolean)
+
+3. AuditPolicy
+- id
+- model_id (FK)
+- audit_frequency (daily | weekly | monthly)
+- baseline_strategy (previous_audit | model_version)
+- audit_scope (JSON: drift, bias, risk, compliance, active_security)
+- policy_reference (JSON or file path)
+- active_audit_enabled (boolean)
+
+4. AuditRun
+- id
+- audit_id
+- model_id (FK)
+- audit_type (passive | active)
+- scheduled_at
+- executed_at
+- execution_status (SUCCESS | PARTIAL | FAILED)
+- audit_result (AUDIT_PASS | AUDIT_WARN | AUDIT_FAIL | BASELINE_CREATED)
+
+5. AuditSummary
+- audit_id (FK)
+- drift_score
+- bias_score
+- risk_score
+- total_findings
+- critical_findings
+- high_findings
+
+6. AuditFinding
+- id
+- audit_id (FK)
+- category
+- rule_id
+- severity
+- metric_name
+- baseline_value
+- current_value
+- deviation_percentage
+- description
+
+================================================================
+PASSIVE AUDIT LOGIC (CORE)
+================================================================
+Passive audits MUST work as follows:
+
+1. Collect CURRENT behavior evidence from EvidenceSource:
+   - API: fetch inference summaries or response stats
+   - LOGS: parse JSON/CSV logs
+   - BATCH: read batch output files
+   - CONTAINER: read output artifacts
+   - SAMPLE: read uploaded samples
+
+2. Generate CURRENT METRICS:
+   - label_distribution
+   - avg_confidence
+   - outcome_rate
+   - confidence_variance
+   - protected_group_outcomes (if present)
+
+3. Load BASELINE METRICS:
+   - From previous approved audit
+   - OR model version baseline
+
+4. Compare BASELINE vs CURRENT:
+   - Drift score = distribution delta
+   - Bias score = group disparity delta
+   - Risk score = confidence + outcome deviation
+
+5. Generate FINDINGS when thresholds exceeded
+
+6. If no baseline exists:
+   - Store current metrics
+   - Mark audit_result = BASELINE_CREATED
+
+IMPORTANT:
+- NO test prompts
+- NO live traffic
+- NO raw data storage
+
+================================================================
+ACTIVE AUDIT LOGIC (OPTIONAL, RULE-BASED)
+================================================================
+Active audits run ONLY if:
+AuditPolicy.active_audit_enabled = true
+
+Active audit must:
+- Use explicit, limited access
+- Execute lightweight security rules
+- NOT behave like monitoring
+
+Rules examples:
+- Prompt injection susceptibility
+- Unsafe completion
+- Policy bypass
+- Data leakage indicators
+
+Store only:
+- rule_id
+- pass/fail
+- severity
+- summary evidence
+
+================================================================
+SCHEDULER (CRITICAL)
+================================================================
+Implement an internal scheduler that:
+
+- Runs automatically at startup
+- Reads all AuditPolicy entries
+- Executes audits when due
+- Creates AuditRun entries
+- NEVER requires user trigger
+
+Scheduler must support:
+- daily
+- weekly
+- monthly
+
+================================================================
+API ENDPOINTS (FRONTEND DEPENDS ON THESE)
+================================================================
+
+Implement REST APIs for:
+
+- POST /models/register
+- GET /models
+- GET /models/{model_id}
+
+- POST /audit-policies
+- GET /audit-policies
+
+- GET /audits
+- GET /audits/{audit_id}
+- GET /audits/model/{model_id}
+
+- GET /findings
+- GET /findings/{audit_id}
+
+- GET /dashboard/overview
+- GET /dashboard/model/{model_id}
+
+Responses MUST match frontend expectations.
+
+================================================================
+OUTPUT REQUIREMENTS
+================================================================
+Generate:
+- Fully runnable FastAPI backend
+- Database schema creation
+- Scheduler implementation
+- Real audit logic (not placeholders)
+- Clear comments
+- Sample seed data for demo
+
+This backend must work end-to-end with the existing frontend
+and demonstrate real-time AI auditing behavior.

@@ -1,0 +1,133 @@
+You are updating an existing AI Auditor backend.
+
+Problem:
+The dashboard is still showing metrics even when no real audits
+or evidence exist. This indicates fallback logic, seeded data,
+or improper empty-state handling.
+
+Goal:
+Ensure the dashboard shows metrics ONLY when real audit data exists.
+If no audits exist, the dashboard must return explicit NO_DATA states.
+
+========================================================
+STRICT NON-NEGOTIABLE RULES
+========================================================
+- Remove ALL fallback metric logic
+- Remove ALL default / sample / seeded values
+- Remove ALL hardcoded percentages or scores
+- NEVER fabricate metrics
+- NEVER return zeros as a substitute for missing data
+- Empty data must be explicit, not disguised
+
+========================================================
+REQUIRED CHANGES
+========================================================
+
+--------------------------------------------------------
+1. DATABASE STATE MUST BE THE SOURCE OF TRUTH
+--------------------------------------------------------
+Dashboard metrics MUST be computed ONLY from these tables:
+- AuditRun
+- AuditSummary
+- AuditFinding
+
+If these tables contain ZERO rows:
+- Dashboard MUST return NO_DATA
+- Dashboard MUST NOT compute metrics
+
+--------------------------------------------------------
+2. REMOVE ALL FALLBACK METRIC LOGIC
+--------------------------------------------------------
+Delete or refactor any logic like:
+- value or 0
+- if not data: return default metrics
+- hardcoded drift_score, bias_score, risk_score
+- demo summaries or seed generators
+
+Metrics must only exist if backed by DB rows.
+
+--------------------------------------------------------
+3. ENFORCE EXPLICIT EMPTY STATES
+--------------------------------------------------------
+Modify dashboard endpoints:
+
+GET /dashboard/overview
+GET /dashboard/model/{model_id}
+
+Behavior:
+IF AuditRun count == 0:
+Return:
+
+{
+  "status": "NO_DATA",
+  "message": "No audits have been executed yet",
+  "metrics": null
+}
+
+IF audits exist BUT no baseline established:
+Return:
+
+{
+  "status": "BASELINE_NOT_ESTABLISHED",
+  "message": "Baseline has not been created yet",
+  "metrics": null
+}
+
+ONLY return metrics when:
+- At least one audit exists
+- Baseline exists
+- AuditSummary rows exist
+
+--------------------------------------------------------
+4. VALIDATE AUDIT WINDOW DATA
+--------------------------------------------------------
+If an audit ran but found NO evidence:
+- audit_result = NO_EVIDENCE
+- Do NOT generate summaries
+- Do NOT generate findings
+- Dashboard must ignore this audit for metrics
+
+--------------------------------------------------------
+5. DISABLE AUTO-SEEDING AND AUTO-AUDITS
+--------------------------------------------------------
+- Remove any startup seed data
+- Remove any auto-created audit runs
+- Add a configuration flag:
+
+ENABLE_SCHEDULER = false (default for development)
+
+Scheduler should run ONLY when explicitly enabled.
+
+--------------------------------------------------------
+6. DASHBOARD METRICS MUST BE QUERY-BASED
+--------------------------------------------------------
+Examples (MANDATORY pattern):
+
+- total_audits = COUNT(AuditRun)
+- passed_audits = COUNT(AuditRun WHERE audit_result = 'AUDIT_PASS')
+- critical_findings = COUNT(AuditFinding WHERE severity = 'CRITICAL')
+- drift_score = AVG(AuditSummary.drift_score)
+
+If query returns NULL:
+- Return NULL
+- NOT zero
+
+--------------------------------------------------------
+7. ADD DEFENSIVE CHECKS
+--------------------------------------------------------
+- Prevent division by zero
+- Prevent percentage calculation without baseline
+- If baseline_value is NULL → deviation must be NULL
+
+--------------------------------------------------------
+OUTPUT REQUIREMENTS
+--------------------------------------------------------
+Generate:
+- Updated FastAPI dashboard endpoints
+- Clean SQLAlchemy queries
+- No seed data
+- No demo values
+- Clear comments explaining NO_DATA vs real metrics
+
+The backend must behave like a real audit system:
+If no audits exist, the dashboard must show NOTHING.
